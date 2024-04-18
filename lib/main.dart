@@ -1,4 +1,8 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -49,13 +53,57 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class SDO {
+  String index;
+  String name;
+  String type;
+  int bitSize;
+  SDO({
+    required this.index,
+    required this.name,
+    required this.type,
+    required this.bitSize
+  });
+}
+
+class Device {
+  String name;
+  String type;
+  String productCode;
+  String revision;
+  List<SDO> ?sdo;
+
+
+  Device({
+    required this.name,
+    required this.type,
+    required this.productCode,
+    required this.revision,
+    this.sdo
+  });
+
+  @override
+  String toString() {
+    return 'Name: $name Type: $type Product code: $productCode Revision: $revision ';
+  }
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  final file = File('test.xml');
+  late XmlDocument document;
+  
+
+  @override
+  void initState() {
+    document = XmlDocument.parse(file.readAsStringSync());
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -66,6 +114,22 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+    final devices = document.findAllElements('Device').map((element) {
+      final type = element.getElement('Type')!;
+      return Device(
+      name: element.getElement('Name')!.innerText,
+      type: type.innerText,
+      productCode: type.getAttribute('ProductCode')!,
+      revision: type.getAttribute('RevisionNo')!,
+      sdo: element.findAllElements('Object').map((obj_element) => SDO(
+        index: obj_element.getElement('Index')!.innerText,
+        name: obj_element.getElement('Name')!.innerText,
+        type: obj_element.getElement('Type')!.innerText,
+        bitSize: int.parse(obj_element.getElement('BitSize')!.innerText),
+      )).toList()
+      );
+    });
+    devices.forEach(print);
   }
 
   @override
