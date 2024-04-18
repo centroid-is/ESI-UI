@@ -1,189 +1,189 @@
-import 'dart:ffi';
-
-import 'package:flutter/material.dart';
-import 'package:xml/xml.dart';
-import 'dart:io';
+import 'package:esi_ui/xml_parsing.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:macos_ui/macos_ui.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const EsiUi());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class EsiUi extends StatelessWidget {
+  const EsiUi({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return MacosApp(
+      title: 'ESI-UI',
+      theme: MacosThemeData.dark(),
+      home: const MainPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-  
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class SDO {
-  String index;
-  String name;
-  String type;
-  int bitSize;
-  SDO({
-    required this.index,
-    required this.name,
-    required this.type,
-    required this.bitSize
-  });
-}
-
-class Device {
-  String name;
-  String type;
-  String productCode;
-  String revision;
-  List<SDO> ?sdo;
-
-
-  Device({
-    required this.name,
-    required this.type,
-    required this.productCode,
-    required this.revision,
-    this.sdo
-  });
-
-  @override
-  String toString() {
-    return 'Name: $name Type: $type Product code: $productCode Revision: $revision ';
-  }
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  final file = File('test.xml');
-  late XmlDocument document;
-  
-
-  @override
-  void initState() {
-    document = XmlDocument.parse(file.readAsStringSync());
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-    final devices = document.findAllElements('Device').map((element) {
-      final type = element.getElement('Type')!;
-      return Device(
-      name: element.getElement('Name')!.innerText,
-      type: type.innerText,
-      productCode: type.getAttribute('ProductCode')!,
-      revision: type.getAttribute('RevisionNo')!,
-      sdo: element.findAllElements('Object').map((obj_element) => SDO(
-        index: obj_element.getElement('Index')!.innerText,
-        name: obj_element.getElement('Name')!.innerText,
-        type: obj_element.getElement('Type')!.innerText,
-        bitSize: int.parse(obj_element.getElement('BitSize')!.innerText),
-      )).toList()
-      );
-    });
-    devices.forEach(print);
-  }
+class pdo_display_page extends StatelessWidget {
+  const pdo_display_page({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+    return Container(color: MacosColors.appleBrown);
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int pageIndex = 0;
+  String? selectedFile;
+  // Parsed file list
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Do this inside a builder or something.
+    // TODO: Add add file functionality with a file picker
+    parseEsiFile('test/test_files/test.xml').then((value) => setState(() {
+          files.addAll({value.name: value});
+        }));
+  }
+
+  Map<String, EsiFile> files = {};
+  @override
+  Widget build(BuildContext context) {
+    return PlatformMenuBar(
+      menus: const [],
+      child: MacosWindow(
+        sidebar: Sidebar(
+            top: MacosSearchField(
+              placeholder: 'Search',
+              onResultSelected: (result) {
+                switch (result.searchKey) {
+                  case 'Buttons':
+                    setState(() {
+                      pageIndex = 0;
+                    });
+                    break;
+                  case 'Indicators':
+                    setState(() {
+                      pageIndex = 1;
+                    });
+                    break;
+                  case 'Fields':
+                    setState(() {
+                      pageIndex = 2;
+                    });
+                    break;
+                  case 'Colors':
+                    setState(() {
+                      pageIndex = 3;
+                    });
+                    break;
+                  case 'Dialogs and Sheets':
+                    setState(() {
+                      pageIndex = 4;
+                    });
+                    break;
+                  case 'Toolbar':
+                    setState(() {
+                      pageIndex = 6;
+                    });
+                    break;
+                  case 'ResizablePane':
+                    setState(() {
+                      pageIndex = 7;
+                    });
+                    break;
+                  case 'Selectors':
+                    setState(() {
+                      pageIndex = 8;
+                    });
+                    break;
+                }
+              },
+              results: const [
+                SearchResultItem('Buttons'),
+                SearchResultItem('Indicators'),
+                SearchResultItem('Fields'),
+                SearchResultItem('Colors'),
+                SearchResultItem('Dialogs and Sheets'),
+                SearchResultItem('Toolbar'),
+                SearchResultItem('ResizablePane'),
+                SearchResultItem('Selectors'),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+            minWidth: 200,
+            builder: (context, scrollController) {
+              return SidebarItems(
+                  currentIndex: pageIndex,
+                  onChanged: (i) {
+                    setState(() => pageIndex = i);
+                  },
+                  scrollController: scrollController,
+                  itemSize: SidebarItemSize.large,
+                  items: files.values
+                      .map((e) => SidebarItem(leading: const MacosIcon(CupertinoIcons.square_on_square), label: Text(e.name), disclosureItems: [
+                            const SidebarItem(
+                              leading: MacosIcon(CupertinoIcons.selection_pin_in_out),
+                              label: Text('pdo'),
+                            ),
+                            const SidebarItem(
+                              leading: MacosIcon(CupertinoIcons.list_bullet),
+                              label: Text('Objects'),
+                            ),
+                            const SidebarItem(
+                              leading: MacosIcon(CupertinoIcons.person),
+                              label: Text('Vendor'),
+                            )
+                          ]))
+                      .toList());
+            },
+            bottom: GestureDetector(
+                child: const MacosListTile(
+                  leading: MacosIcon(CupertinoIcons.add),
+                  title: Text('Add File'),
+                  subtitle: Text('Add more files to ESI-UI'),
+                ),
+                onTap: () async {
+                  //TODO: Look into other file picker libs. Needs some binary named zenity
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xml']);
+                  if (result == null) {
+                    return;
+                  }
+                  for (var file in result.files) {
+                    if (file.path == null) {
+                      continue;
+                    }
+                    try {
+                      final EsiFile parsedFile = await parseEsiFile(file.path!);
+                      setState(() {
+                        files.addAll({parsedFile.name: parsedFile});
+                      });
+                    } catch (e) {
+                      debugPrint(e.toString());
+                    }
+                  }
+                })),
+        endSidebar: Sidebar(
+          startWidth: 200,
+          minWidth: 200,
+          maxWidth: 300,
+          shownByDefault: false,
+          builder: (context, _) {
+            return const Center(
+              child: Text('End Sidebar'),
+            );
+          },
         ),
+        child: [
+          CupertinoTabView(builder: (_) => const pdo_display_page()),
+          const pdo_display_page(),
+          const pdo_display_page(),
+          const pdo_display_page(),
+        ][pageIndex],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

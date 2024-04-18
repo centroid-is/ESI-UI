@@ -1,0 +1,21 @@
+# Run flutter test suite using github ubuntu runner and latest flutter
+name: Run tests
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version-file: pubspec.yaml
+
+      - run: flutter pub get
+      - run: flutter test
