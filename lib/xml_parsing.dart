@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:xml/xml.dart';
@@ -44,7 +45,17 @@ class EsiFile {
 
 Future<EsiFile> parseEsiFile(String fileLocation) async {
   final file = File(fileLocation);
-  final XmlDocument document = XmlDocument.parse(await file.readAsString());
+  String? fileContents; 
+
+  // This try-catch is not great. Would maybe be an ok solution to require utf-8 formatted files.
+  try{
+    fileContents = await file.readAsString(encoding: utf8);
+  } catch (exception){
+    if (exception is FileSystemException) { // String value was propably not utf-8 let's try iso-8859-1
+    fileContents = await file.readAsString(encoding: Encoding.getByName('iso-8859-1')!);
+    }
+  }
+  final XmlDocument document = XmlDocument.parse(fileContents!);
 
   final ethercatInfoRoot = document.getElement('EtherCATInfo')!;
   final descriptionsNode = ethercatInfoRoot.getElement('Descriptions')!;

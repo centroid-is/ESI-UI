@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 
-void main() {
+void main() async {
   runApp(const EsiUi());
 }
 
@@ -21,12 +21,17 @@ class EsiUi extends StatelessWidget {
   }
 }
 
-class pdo_display_page extends StatelessWidget {
-  const pdo_display_page({super.key});
+class object_display_page extends StatelessWidget {
+  final EsiFile? selectedFile;
+  const object_display_page({super.key, this.selectedFile});
 
   @override
   Widget build(BuildContext context) {
-    return Container(color: MacosColors.appleBrown);
+    if (selectedFile == null) return Text('No file selected');
+    return ListView.builder(itemBuilder: (context, count){
+      debugPrint(count.toString());
+      return Container(color: MacosColors.appleCyan);
+    });
   }
 }
 
@@ -38,16 +43,21 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int pageIndex = 0;
-  String? selectedFile;
+  EsiFile? selectedFile;
+  final _controller = MacosTabController(
+    initialIndex: 0,
+    length: 3,
+  );
   // Parsed file list
   @override
   void initState() {
     super.initState();
     // TODO: Do this inside a builder or something.
     // TODO: Add add file functionality with a file picker
-    parseEsiFile('test/test_files/test.xml').then((value) => setState(() {
-          files.addAll({value.name: value});
-        }));
+    parseEsiFile('test/test_files/Beckhoff EL4xxx.xml')
+        .then((value) => setState(() {
+              files.addAll({value.name: value});
+            }));
   }
 
   Map<String, EsiFile> files = {};
@@ -60,50 +70,10 @@ class _MainPageState extends State<MainPage> {
             top: MacosSearchField(
               placeholder: 'Search',
               onResultSelected: (result) {
-                switch (result.searchKey) {
-                  case 'Buttons':
-                    setState(() {
-                      pageIndex = 0;
-                    });
-                    break;
-                  case 'Indicators':
-                    setState(() {
-                      pageIndex = 1;
-                    });
-                    break;
-                  case 'Fields':
-                    setState(() {
-                      pageIndex = 2;
-                    });
-                    break;
-                  case 'Colors':
-                    setState(() {
-                      pageIndex = 3;
-                    });
-                    break;
-                  case 'Dialogs and Sheets':
-                    setState(() {
-                      pageIndex = 4;
-                    });
-                    break;
-                  case 'Toolbar':
-                    setState(() {
-                      pageIndex = 6;
-                    });
-                    break;
-                  case 'ResizablePane':
-                    setState(() {
-                      pageIndex = 7;
-                    });
-                    break;
-                  case 'Selectors':
-                    setState(() {
-                      pageIndex = 8;
-                    });
-                    break;
-                }
+                debugPrint('searched for $result');
               },
               results: const [
+                // Could use this to filter files when we have allot of them
                 SearchResultItem('Buttons'),
                 SearchResultItem('Indicators'),
                 SearchResultItem('Fields'),
@@ -119,70 +89,72 @@ class _MainPageState extends State<MainPage> {
               return SidebarItems(
                   currentIndex: pageIndex,
                   onChanged: (i) {
-                    setState(() => pageIndex = i);
+                    setState((){ 
+                      selectedFile = files.values.elementAt(i);
+                      pageIndex = i; 
+                    });
                   },
                   scrollController: scrollController,
-                  itemSize: SidebarItemSize.large,
-                  items: files.values
-                      .map((e) => SidebarItem(leading: const MacosIcon(CupertinoIcons.square_on_square), label: Text(e.name), disclosureItems: [
-                            const SidebarItem(
-                              leading: MacosIcon(CupertinoIcons.selection_pin_in_out),
-                              label: Text('pdo'),
-                            ),
-                            const SidebarItem(
-                              leading: MacosIcon(CupertinoIcons.list_bullet),
-                              label: Text('Objects'),
-                            ),
-                            const SidebarItem(
-                              leading: MacosIcon(CupertinoIcons.person),
-                              label: Text('Vendor'),
-                            )
-                          ]))
-                      .toList());
+                  itemSize: SidebarItemSize.medium,
+                  items: files.values.map((e) => SidebarItem(
+                              leading: const MacosIcon(
+                                  CupertinoIcons.square_on_square),
+                              label: Text(e.name))).toList());
             },
-            bottom: GestureDetector(
-                child: const MacosListTile(
-                  leading: MacosIcon(CupertinoIcons.add),
-                  title: Text('Add File'),
-                  subtitle: Text('Add more files to ESI-UI'),
-                ),
-                onTap: () async {
-                  //TODO: Look into other file picker libs. Needs some binary named zenity
-                  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xml']);
-                  if (result == null) {
-                    return;
-                  }
-                  for (var file in result.files) {
-                    if (file.path == null) {
-                      continue;
-                    }
-                    try {
-                      final EsiFile parsedFile = await parseEsiFile(file.path!);
-                      setState(() {
-                        files.addAll({parsedFile.name: parsedFile});
-                      });
-                    } catch (e) {
-                      debugPrint(e.toString());
-                    }
-                  }
-                })),
+            bottom: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                    child: const MacosListTile(
+                      leading: MacosIcon(CupertinoIcons.add),
+                      title: Text('Add File'),
+                      subtitle: Text('Add more files to ESI-UI'),
+                    ),
+                    onTap: () async {
+                      //TODO: Look into other file picker libs. Needs some binary named zenity
+                      FilePickerResult? result = await FilePicker.platform
+                          .pickFiles(
+                              type: FileType.custom,
+                              allowedExtensions: ['xml']);
+                      if (result == null) {
+                        return;
+                      }
+                      for (var file in result.files) {
+                        if (file.path == null) {
+                          continue;
+                        }
+                        try {
+                          final EsiFile parsedFile =
+                              await parseEsiFile(file.path!);
+                          setState(() {
+                            files.addAll({parsedFile.name: parsedFile});
+                          });
+                        } catch (e) {
+                          debugPrint(e.toString());
+                        }
+                      }
+                    }))),
         endSidebar: Sidebar(
           startWidth: 200,
           minWidth: 200,
           maxWidth: 300,
           shownByDefault: false,
           builder: (context, _) {
-            return const Center(
+            return Center(
+                child: Container(
               child: Text('End Sidebar'),
-            );
+              color: MacosColors.appleCyan,
+            ));
           },
         ),
-        child: [
-          CupertinoTabView(builder: (_) => const pdo_display_page()),
-          const pdo_display_page(),
-          const pdo_display_page(),
-          const pdo_display_page(),
-        ][pageIndex],
+        child: MacosTabView(controller: _controller, tabs: [
+          MacosTab(label: 'Objects'),
+          MacosTab(label: 'Vendor'),
+          MacosTab(label: 'Pdo?')
+        ], children: [
+          object_display_page(selectedFile: selectedFile),
+          Container(color: MacosColors.appleBlue),
+          Container(color: MacosColors.appleRed)
+        ]),
       ),
     );
   }
