@@ -27,11 +27,12 @@ class object_display_page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (selectedFile == null) return Text('No file selected');
-    return ListView.builder(itemBuilder: (context, count){
-      debugPrint(count.toString());
-      return Container(color: MacosColors.appleCyan);
-    });
+    if (selectedFile == null) return const Text('No file selected');
+    return Container(color: MacosColors.appleMagenta);
+    // return ListView.builder(itemBuilder: (context, count) {
+    //   debugPrint(count.toString());
+    //   return Container(color: MacosColors.appleCyan);
+    // });
   }
 }
 
@@ -54,10 +55,9 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     // TODO: Do this inside a builder or something.
     // TODO: Add add file functionality with a file picker
-    parseEsiFile('test/test_files/Beckhoff EL4xxx.xml')
-        .then((value) => setState(() {
-              files.addAll({value.name: value});
-            }));
+    parseEsiFile('test/test_files/Beckhoff EL4xxx.xml').then((value) => setState(() {
+          files.addAll({value.name: value});
+        }));
   }
 
   Map<String, EsiFile> files = {};
@@ -89,17 +89,14 @@ class _MainPageState extends State<MainPage> {
               return SidebarItems(
                   currentIndex: pageIndex,
                   onChanged: (i) {
-                    setState((){ 
+                    setState(() {
                       selectedFile = files.values.elementAt(i);
-                      pageIndex = i; 
+                      pageIndex = i;
                     });
                   },
                   scrollController: scrollController,
                   itemSize: SidebarItemSize.medium,
-                  items: files.values.map((e) => SidebarItem(
-                              leading: const MacosIcon(
-                                  CupertinoIcons.square_on_square),
-                              label: Text(e.name))).toList());
+                  items: files.values.map((e) => SidebarItem(leading: const MacosIcon(CupertinoIcons.square_on_square), label: Text(e.name))).toList());
             },
             bottom: MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -111,10 +108,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                     onTap: () async {
                       //TODO: Look into other file picker libs. Needs some binary named zenity
-                      FilePickerResult? result = await FilePicker.platform
-                          .pickFiles(
-                              type: FileType.custom,
-                              allowedExtensions: ['xml']);
+                      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xml']);
                       if (result == null) {
                         return;
                       }
@@ -123,8 +117,7 @@ class _MainPageState extends State<MainPage> {
                           continue;
                         }
                         try {
-                          final EsiFile parsedFile =
-                              await parseEsiFile(file.path!);
+                          final EsiFile parsedFile = await parseEsiFile(file.path!);
                           setState(() {
                             files.addAll({parsedFile.name: parsedFile});
                           });
@@ -141,20 +134,15 @@ class _MainPageState extends State<MainPage> {
           builder: (context, _) {
             return Center(
                 child: Container(
-              child: Text('End Sidebar'),
               color: MacosColors.appleCyan,
+              child: const Text('End Sidebar'),
             ));
           },
         ),
-        child: MacosTabView(controller: _controller, tabs: [
-          MacosTab(label: 'Objects'),
-          MacosTab(label: 'Vendor'),
-          MacosTab(label: 'Pdo?')
-        ], children: [
-          object_display_page(selectedFile: selectedFile),
-          Container(color: MacosColors.appleBlue),
-          Container(color: MacosColors.appleRed)
-        ]),
+        child: MacosTabView(
+            controller: _controller,
+            tabs: const [MacosTab(label: 'Objects'), MacosTab(label: 'Vendor'), MacosTab(label: 'Pdo?')],
+            children: [object_display_page(selectedFile: selectedFile), Container(color: MacosColors.appleBlue), Container(color: MacosColors.appleRed)]),
       ),
     );
   }
