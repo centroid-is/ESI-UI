@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--13. July 2020-->
+<!--21. December 2020 latest changes-->
+<EtherCATInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="1.5" xsi:noNamespaceSchemaLocation="EtherCATInfo.xsd">
+  <Vendor>
+    <Id>#x003b</Id>
+    <Name>Lenze</Name>
+    <URL>http://www.lenze.com</URL>
+    <URL LcId="1031">http://www.lenze.de</URL>
+    <ImageData16x14>424DE6000000000000007600000028000000100000000E000000010004000000000070000000C40E0000C40E000000000000000000000000000000008000008000000080800080000000800080008080000080808000C0C0C0000000FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFFFFFFFFFFFFEEEEEFFFFFFFFFFCCCCCCEFFFFFFFFECCCCCCEFFFFFFFFECCEEEEFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFECCEFFFFFFFFFFFFFCCFFFFFFFFFFFFFFFFFFFFFFFFF</ImageData16x14>
+  </Vendor>
+  <Descriptions>
+    <Groups>
+      <Group SortOrder="0">
+        <Type>Drives</Type>
+        <Name LcId="1031">Antriebe</Name>
+        <Name LcId="1033">Drives</Name>
+        <ImageData16x14>424DE6000000000000007600000028000000100000000E000000010004000000000070000000C40E0000C40E000000000000000000000000000000008000008000000080800080000000800080008080000080808000C0C0C0000000FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFCCCCCFFFFFFFFFFCEC8CCFFFFFFFFFCEEC8CCFFFFFFFFCEEEC8CCFFFFFFFCEEEEC8CCFFFFFFCEEEEEC8CCFFFFFFCEEEEFCFCCFFFFFFCEEECFFFFCFFFFFFCEEFCCFFCFFFFFFFCEFFFCCCFFFFFFFFCFFFFFCFFFFFFFFFFCFFFCFFFFFFFFFFFFCFCFFFFFFFFFFFFFFCFFFFFFFFFF</ImageData16x14>
+      </Group>
+    </Groups>
+    <Devices>
+      <Device Physics="YY">
+        <Type ProductCode="#x69055000" CheckProductCode="EQ" RevisionNo="#x00070000" CheckRevisionNo="EQ_OR_G" UseLrdLwr="false">Inverter i550 Cabinet</Type>
+        <Name LcId="1033">i550 Cabinet V07.00.xx</Name>
+        <URL>http://www.lenze.com</URL>
+        <Info>
+          <StateMachine>
+            <Timeout>
+              <PreopTimeout>3000</PreopTimeout>
+              <SafeopOpTimeout>3000</SafeopOpTimeout>
+              <BackToInitTimeout>3000</BackToInitTimeout>
+              <BackToSafeopTimeout>3000</BackToSafeopTimeout>
+            </Timeout>
+          </StateMachine>
+          <Mailbox>
+            <Timeout>
+              <RequestTimeout>100</RequestTimeout>
+              <ResponseTimeout>2000</ResponseTimeout>
+            </Timeout>
+          </Mailbox>
+          <IdentificationReg134>true</IdentificationReg134>
+        </Info>
+        <GroupType>Drives</GroupType>
+        <Profile>
+          <DictionaryFile>Lenze_i550cabinet_ObjDict_V0700.xml</DictionaryFile>
+          <DiagFile>Lenze_i550cabinet_DiagMessages.xml</DiagFile>
+        </Profile>
+        <Fmmu>Outputs</Fmmu>
+        <Fmmu>Inputs</Fmmu>
+        <Fmmu>MBoxState</Fmmu>
+        <Sm Enable="1" DefaultSize="128" MinSize="128" MaxSize="256" StartAddress="#x1000" ControlByte="#x26">MBoxOut</Sm>
+        <Sm Enable="1" DefaultSize="128" MinSize="128" MaxSize="256" StartAddress="#x1100" ControlByte="#x22">MBoxIn</Sm>
+        <Sm Enable="1" DefaultSize="4" MinSize="0" MaxSize="32" StartAddress="#x1200" ControlByte="#x64">Outputs</Sm>
+        <Sm Enable="1" DefaultSize="6" MinSize="0" MaxSize="32" StartAddress="#x1300" ControlByte="#x20">Inputs</Sm>
+        <RxPdo Fixed="1" Sm="2">
+          <Index>#x1603</Index>
+          <Name>RPDO (A) Velocity</Name>
+          <Entry>
+            <Index>#x6040</Index>
+            <SubIndex>0</SubIndex>
+            <BitLen>16</BitLen>
+            <Name>CiA control word</Name>
+            <DataType>UINT</DataType>
+          </Entry>
+          <Entry>
+            <Index>#x6042</Index>
+            <SubIndex>0</SubIndex>
+            <BitLen>16</BitLen>
+            <Name>Set speed</Name>
+            <DataType>INT</DataType>
+          </Entry>
+        </RxPdo>
+        <RxPdo>
+          <Index>#x1605</Index>
+          <Name>RPDO (A) user config</Name>
+        </RxPdo>
+        <TxPdo Fixed="1" Sm="3">
+          <Index>#x1A03</Index>
+          <Name>TPDO (A) Velocity</Name>
+          <Entry>
+            <Index>#x6041</Index>
+            <SubIndex>0</SubIndex>
+            <BitLen>16</BitLen>
+            <Name>CiA status word</Name>
+            <DataType>UINT</DataType>
+          </Entry>
+          <Entry>
+            <Index>#x6044</Index>
+            <SubIndex>0</SubIndex>
+            <BitLen>16</BitLen>
+            <Name>Actual speed</Name>
+            <DataType>INT</DataType>
+          </Entry>
+          <Entry>
+            <Index>#x603F</Index>
+            <SubIndex>0</SubIndex>
+            <BitLen>16</BitLen>
+            <Name>Error code</Name>
+            <DataType>UINT</DataType>
+          </Entry>
+        </TxPdo>
+        <TxPdo>
+          <Index>#x1A05</Index>
+          <Name>TPDO (A) user config</Name>
+        </TxPdo>
+        <Mailbox DataLinkLayer="true">
+          <EoE/>
+          <CoE DiagHistory="true" SegmentedSdo="true" SdoInfo="false" PdoConfig="true" PdoAssign="true" CompleteAccess="false"/>
+          <FoE/>
+        </Mailbox>
+        <ESC>
+          <Reg0400>2498</Reg0400>
+          <Reg0420>1000</Reg0420>
+        </ESC>
+        <Eeprom>
+          <ByteSize>896</ByteSize>
+          <ConfigData>803000AA0001</ConfigData>
+          <BootStrap>0010000100110001</BootStrap>
+        </Eeprom>
+        <ImageData16x14>424DE6000000000000007600000028000000100000000E000000010004000000000070000000000000000000000000000000000000000000000000008000008000000080800080000000800080008080000080808000C0C0C0000000FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFFFFFFFCCCCCCFFFFFFFFFFCFFFECEFFFFFFFFFCFFFECEF80008FFFCFFFECEF00000FFFCFFFECEF00900FFFCFFFECEF00000FFFCFFFECEF80008FFFCCCCCCEFFFFFFFFFCFFFECEFFFFFFFFFCCFFCCEFFFFFFFFFECCCCEEFFFFFFFFFFEEEEEFFFFFFFFFFFFFFFFFFFFFFFFF</ImageData16x14>
+      </Device>
+    </Devices>
+  </Descriptions>
+</EtherCATInfo>
+
