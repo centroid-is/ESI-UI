@@ -150,8 +150,8 @@ class PDO {
 class Device {
   String name;
   String type;
-  String? productCode;
-  String? revision;
+  int? productCode;
+  int? revision;
   List<SDO>? sdo;
   List<PDO>? rxPdo;
   List<PDO>? txPdo;
@@ -224,8 +224,8 @@ Future<EsiFile> parseEsiFile(String fileLocation) async {
     return Device(
       name: element.getElement('Name')!.innerText,
       type: type.innerText,
-      productCode: type.getAttribute('ProductCode'),
-      revision: type.getAttribute('RevisionNo'),
+      productCode: tryParseHexOrInt(type.getAttribute('ProductCode')),
+      revision: tryParseHexOrInt(type.getAttribute('RevisionNo')),
       sdo: element.findAllElements('Object').map((objElement) {
         final info = objElement.getElement('Info');
         late Info? infoObj = null;
