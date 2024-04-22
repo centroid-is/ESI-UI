@@ -155,6 +155,7 @@ class Device {
   List<SDO>? sdo;
   List<PDO>? rxPdo;
   List<PDO>? txPdo;
+  Uri? url;
 
   Device(
       {required this.name,
@@ -163,11 +164,12 @@ class Device {
       this.revision,
       this.sdo,
       this.rxPdo,
-      this.txPdo});
+      this.txPdo,
+      this.url});
 
   @override
   String toString() {
-    return 'Name: $name Type: $type Product code: $productCode Revision: $revision SDO: [${(sdo ?? <SDO>[]).map((element) => element.toString())}]';
+    return 'Name: $name Type: Url: $url $type Product code: $productCode Revision: $revision SDO: [${(sdo ?? <SDO>[]).map((element) => element.toString())}]';
   }
 }
 
@@ -312,9 +314,12 @@ Future<EsiFile> parseEsiFile(String fileLocation) async {
             entries: entries,
             fixed: pdoElement.getAttribute('Fixed') == '1');
       }).toList(),
+      url: element.getElement('URL') == null
+          ? null
+          : Uri.parse(element.getElement('URL')!.innerText),
     );
   });
-  // devices.forEach(print);
+  devices.forEach(print);
 
   final vendorElement = ethercatInfoRoot.getElement('Vendor')!;
   final vendor = Vendor(
