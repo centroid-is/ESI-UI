@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:adwaita/adwaita.dart';
 import 'package:esi_ui/xml_parsing.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:libadwaita/libadwaita.dart';
 import 'package:libadwaita_window_manager/libadwaita_window_manager.dart';
 import 'package:universal_io/io.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
+
+import 'pages/object_page.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,8 +73,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  ValueNotifier<int> counter = ValueNotifier<int>(0);
-
   late ScrollController listController;
   late ScrollController settingsController;
   late FlapController _flapController;
@@ -105,7 +106,7 @@ class _MainPageState extends State<MainPage> {
   Map<String, EsiFile> files = {};
   @override
   Widget build(BuildContext context) {
-    final developers = {'Someones name': 'username'};
+    final developers = {'Jón Bjarni Bjarnason': 'jbbjarnason', 'Ómar Högni Guðmarsson': 'omarhogni'};
     return AdwScaffold(
       flapController: _flapController,
       actions: AdwActions().windowManager,
@@ -122,6 +123,30 @@ class _MainPageState extends State<MainPage> {
       ],
       title: const Text('ESI-UI'),
       end: [
+        MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+                child: const Icon(Icons.add),
+                onTap: () async {
+                  //TODO: Look into other file picker libs. Needs some binary named zenity
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xml']);
+                  if (result == null) {
+                    return;
+                  }
+                  for (var file in result.files) {
+                    if (file.path == null) {
+                      continue;
+                    }
+                    try {
+                      final EsiFile parsedFile = await parseEsiFile(file.path!);
+                      setState(() {
+                        files.addAll({parsedFile.name: parsedFile});
+                      });
+                    } catch (e) {
+                      debugPrint(e.toString());
+                    }
+                  }
+                })),
         GtkPopupMenu(
           body: Column(
             mainAxisSize: MainAxisSize.min,
@@ -129,29 +154,31 @@ class _MainPageState extends State<MainPage> {
             children: [
               AdwButton.flat(
                 onPressed: () {
-                  counter.value = 0;
                   Navigator.of(context).pop();
+                  setState(() {
+                    files.clear();
+                  });
                 },
                 padding: AdwButton.defaultButtonPadding.copyWith(
                   top: 10,
                   bottom: 10,
                 ),
                 child: const Text(
-                  'Reset Counter',
+                  'Remove all files',
                   style: TextStyle(fontSize: 15),
                 ),
               ),
               const Divider(),
-              AdwButton.flat(
-                padding: AdwButton.defaultButtonPadding.copyWith(
-                  top: 10,
-                  bottom: 10,
-                ),
-                child: const Text(
-                  'Preferences',
-                  style: TextStyle(fontSize: 15),
-                ),
-              ),
+              // AdwButton.flat(
+              //   padding: AdwButton.defaultButtonPadding.copyWith(
+              //     top: 10,
+              //     bottom: 10,
+              //   ),
+              //   child: const Text(
+              //     'Preferences',
+              //     style: TextStyle(fontSize: 15),
+              //   ),
+              // ),
               AdwButton.flat(
                 padding: AdwButton.defaultButtonPadding.copyWith(
                   top: 10,
@@ -160,7 +187,7 @@ class _MainPageState extends State<MainPage> {
                 onPressed: () => showDialog<Widget>(
                   context: context,
                   builder: (ctx) => AdwAboutWindow(
-                    issueTrackerLink: 'https://github.com/gtk-flutter/libadwaita/issues',
+                    issueTrackerLink: 'https://github.com/skaginn3x/esi-ui/issues',
                     appIcon: const Icon(Icons.run_circle_sharp), //Image.asset('assets/logo.png'),
                     credits: [
                       AdwPreferencesGroup.creditsBuilder(
@@ -200,94 +227,7 @@ class _MainPageState extends State<MainPage> {
           _currentIndex = index;
         }),
       ),
-      body: AdwViewStack(
-        animationDuration: const Duration(milliseconds: 100),
-        index: _currentIndex,
-        children: [
-          Container(color: Colors.amber),
-          Container(color: Colors.red),
-          Container(color: Colors.black),
-        ],
-      ),
-      // child: MacosWindow(
-      //   sidebar: Sidebar(
-      //       top: MacosSearchField(
-      //         placeholder: 'Search',
-      //         onResultSelected: (result) {
-      //           debugPrint('searched for $result');
-      //         },
-      //         results: const [
-      //           // Could use this to filter files when we have allot of them
-      //           SearchResultItem('Buttons'),
-      //           SearchResultItem('Indicators'),
-      //           SearchResultItem('Fields'),
-      //           SearchResultItem('Colors'),
-      //           SearchResultItem('Dialogs and Sheets'),
-      //           SearchResultItem('Toolbar'),
-      //           SearchResultItem('ResizablePane'),
-      //           SearchResultItem('Selectors'),
-      //         ],
-      //       ),
-      //       minWidth: 200,
-      //       builder: (context, scrollController) {
-      //         return SidebarItems(
-      //             currentIndex: pageIndex,
-      //             onChanged: (i) {
-      //               setState(() {
-      //                 selectedFile = files.values.elementAt(i);
-      //                 pageIndex = i;
-      //               });
-      //             },
-      //             scrollController: scrollController,
-      //             itemSize: SidebarItemSize.medium,
-      //             items:
-      //       },
-      //       bottom: MouseRegion(
-      //           cursor: SystemMouseCursors.click,
-      //           child: GestureDetector(
-      //               child: const MacosListTile(
-      //                 leading: MacosIcon(CupertinoIcons.add),
-      //                 title: Text('Add File'),
-      //                 subtitle: Text('Add more files to ESI-UI'),
-      //               ),
-      //               onTap: () async {
-      //                 //TODO: Look into other file picker libs. Needs some binary named zenity
-      //                 FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['xml']);
-      //                 if (result == null) {
-      //                   return;
-      //                 }
-      //                 for (var file in result.files) {
-      //                   if (file.path == null) {
-      //                     continue;
-      //                   }
-      //                   try {
-      //                     final EsiFile parsedFile = await parseEsiFile(file.path!);
-      //                     setState(() {
-      //                       files.addAll({parsedFile.name: parsedFile});
-      //                     });
-      //                   } catch (e) {
-      //                     debugPrint(e.toString());
-      //                   }
-      //                 }
-      //               }))),
-      //   endSidebar: Sidebar(
-      //     startWidth: 200,
-      //     minWidth: 200,
-      //     maxWidth: 300,
-      //     shownByDefault: false,
-      //     builder: (context, _) {
-      //       return Center(
-      //           child: Container(
-      //         color: MacosColors.appleCyan,
-      //         child: const Text('End Sidebar'),
-      //       ));
-      //     },
-      //   ),
-      //   child: MacosTabView(
-      //       controller: _controller,
-      //       tabs: const [MacosTab(label: 'Objects'), MacosTab(label: 'Vendor'), MacosTab(label: 'Pdo?')],
-      //       children: [object_display_page(selectedFile: selectedFile), Container(color: MacosColors.appleBlue), Container(color: MacosColors.appleRed)]),
-      // ),
+      body: AdwViewStack(animationDuration: const Duration(milliseconds: 100), index: _currentIndex, children: files.values.map((value) => object_display_page(selectedFile: value)).toList()),
     );
   }
 }
