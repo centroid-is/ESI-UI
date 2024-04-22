@@ -70,7 +70,7 @@ class Flags {
 }
 
 class SDO {
-  String index;
+  int index;
   String name;
   String type;
   int bitSize;
@@ -120,7 +120,7 @@ class SDO {
 // </TxPdo>
 
 class Entry {
-  String index;
+  int index;
   int bitLen;
   int? subIndex;
   String? name;
@@ -136,10 +136,15 @@ class Entry {
 }
 
 class PDO {
-  String index;
+  int index;
   String name;
+  bool fixed = true; // this is optional but does not declare default value
   List<Entry> entries;
-  PDO({required this.index, required this.name, required this.entries});
+  PDO(
+      {required this.index,
+      required this.name,
+      required this.entries,
+      required this.fixed});
 }
 
 class Device {
@@ -156,7 +161,9 @@ class Device {
       required this.type,
       this.productCode,
       this.revision,
-      this.sdo});
+      this.sdo,
+      this.rxPdo,
+      this.txPdo});
 
   @override
   String toString() {
@@ -198,60 +205,116 @@ Future<EsiFile> parseEsiFile(String fileLocation) async {
   final devicesNode = descriptionsNode.getElement('Devices')!;
   final deviceNodes = devicesNode.findElements('Device');
 
-  final devices = deviceNodes.map((element) {
-    final type = element.getElement('Type')!;
-    return Device(
-        name: element.getElement('Name')!.innerText,
-        type: type.innerText,
-        productCode: type.getAttribute('ProductCode'),
-        revision: type.getAttribute('RevisionNo'),
-        sdo: element.findAllElements('Object').map((objElement) {
-          final info = objElement.getElement('Info');
-          late Info? infoObj = null;
-          if (info != null) {
-            final subItems =
-                info.findAllElements('SubItem').map((subItemElement) {
-              final subItemInfo = subItemElement.getElement('Info')!;
-              return SubItem(
-                  name: subItemElement.getElement('Name')!.innerText,
-                  info: Info(
-                      defaultData:
-                          subItemInfo.getElement('DefaultData')?.innerText));
-            }).toList();
-            infoObj = Info(
-                defaultData: info.getElement('DefaultData')?.innerText,
-                subItems: subItems);
-          }
-          final flagElement = objElement.getElement('Flags')!;
-          final extractOptionalInt =
-              (String? value) => value == null ? null : int.parse(value);
-
-          final flags = Flags(
-              access: flagElement.getElement('Access')!.innerText,
-              category: flagElement.getElement('Category')?.innerText,
-              backup: extractOptionalInt(
-                  flagElement.getElement('Backup')?.innerText),
-              setting: extractOptionalInt(
-                  flagElement.getElement('Setting')?.innerText),
-              pdoMapping: flagElement.getElement('PdoMapping')?.innerText);
-
-          return SDO(
-              index: objElement.getElement('Index')!.innerText,
-              name: objElement.getElement('Name')!.innerText,
-              type: objElement.getElement('Type')!.innerText,
-              bitSize: int.parse(objElement.getElement('BitSize')!.innerText),
-              flags: flags,
-              info: infoObj);
-        }).toList());
-  });
-  // devices.forEach(print);
-
   parseHexOrInt(String value) {
     if (value.startsWith('#x')) {
       return int.parse(value.substring(2), radix: 16);
     }
     return int.parse(value);
   }
+
+  tryParseHexOrInt(String? value) {
+    if (value == null) {
+      return null;
+    }
+    return parseHexOrInt(value);
+  }
+
+  final devices = deviceNodes.map((element) {
+    final type = element.getElement('Type')!;
+    return Device(
+      name: element.getElement('Name')!.innerText,
+      type: type.innerText,
+      productCode: type.getAttribute('ProductCode'),
+      revision: type.getAttribute('RevisionNo'),
+      sdo: element.findAllElements('Object').map((objElement) {
+        final info = objElement.getElement('Info');
+        late Info? infoObj = null;
+        if (info != null) {
+          final subItems =
+              info.findAllElements('SubItem').map((subItemElement) {
+            final subItemInfo = subItemElement.getElement('Info')!;
+            return SubItem(
+                name: subItemElement.getElement('Name')!.innerText,
+                info: Info(
+                    defaultData:
+                        subItemInfo.getElement('DefaultData')?.innerText));
+          }).toList();
+          infoObj = Info(
+              defaultData: info.getElement('DefaultData')?.innerText,
+              subItems: subItems);
+        }
+        final flagElement = objElement.getElement('Flags')!;
+
+        final flags = Flags(
+            access: flagElement.getElement('Access')!.innerText,
+            category: flagElement.getElement('Category')?.innerText,
+            backup:
+                tryParseHexOrInt(flagElement.getElement('Backup')?.innerText),
+            setting:
+                tryParseHexOrInt(flagElement.getElement('Setting')?.innerText),
+            pdoMapping: flagElement.getElement('PdoMapping')?.innerText);
+
+        return SDO(
+            index: parseHexOrInt(objElement.getElement('Index')!.innerText),
+            name: objElement.getElement('Name')!.innerText,
+            type: objElement.getElement('Type')!.innerText,
+            bitSize: int.parse(objElement.getElement('BitSize')!.innerText),
+            flags: flags,
+            info: infoObj);
+      }).toList(),
+      rxPdo: element.findAllElements('RxPdo').map((pdoElement) {
+        // Index is mandatory, but Beckhoff EtherCAT Terminals.xml does not have it
+        if (pdoElement.getElement('Index') == null) {
+          return PDO(
+              index: 0,
+              name: 'Unknown',
+              entries: [],
+              fixed: pdoElement.getAttribute('Fixed') == '1');
+        }
+        final entries = pdoElement.findAllElements('Entry').map((entry) {
+          return Entry(
+              index: parseHexOrInt(entry.getElement('Index')!.innerText),
+              bitLen: int.parse(entry.getElement('BitLen')!.innerText),
+              subIndex:
+                  tryParseHexOrInt(entry.getElement('SubIndex')?.innerText),
+              name: entry.getElement('Name')?.innerText,
+              dataType: entry.getElement('DataType')?.innerText,
+              comment: entry.getElement('Comment')?.innerText);
+        }).toList();
+        return PDO(
+            index: parseHexOrInt(pdoElement.getElement('Index')!.innerText),
+            name: pdoElement.getElement('Name')!.innerText,
+            entries: entries,
+            fixed: pdoElement.getAttribute('Fixed') == '1');
+      }).toList(),
+      txPdo: element.findAllElements('TxPdo').map((pdoElement) {
+        // Index is mandatory, but Beckhoff EtherCAT Terminals.xml does not have it
+        if (pdoElement.getElement('Index') == null) {
+          return PDO(
+              index: 0,
+              name: 'Unknown',
+              entries: [],
+              fixed: pdoElement.getAttribute('Fixed') == '1');
+        }
+        final entries = pdoElement.findAllElements('Entry').map((entry) {
+          return Entry(
+              index: parseHexOrInt(entry.getElement('Index')!.innerText),
+              bitLen: int.parse(entry.getElement('BitLen')!.innerText),
+              subIndex:
+                  tryParseHexOrInt(entry.getElement('SubIndex')?.innerText),
+              name: entry.getElement('Name')?.innerText,
+              dataType: entry.getElement('DataType')?.innerText,
+              comment: entry.getElement('Comment')?.innerText);
+        }).toList();
+        return PDO(
+            index: parseHexOrInt(pdoElement.getElement('Index')!.innerText),
+            name: pdoElement.getElement('Name')!.innerText,
+            entries: entries,
+            fixed: pdoElement.getAttribute('Fixed') == '1');
+      }).toList(),
+    );
+  });
+  // devices.forEach(print);
 
   final vendorElement = ethercatInfoRoot.getElement('Vendor')!;
   final vendor = Vendor(
