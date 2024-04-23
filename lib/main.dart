@@ -227,7 +227,10 @@ class _MainPageState extends State<MainPage> {
           _currentIndex = index;
         }),
       ),
-      body: AdwViewStack(animationDuration: const Duration(milliseconds: 100), index: _currentIndex, children: files.values.map((value) => object_display_page(selectedFile: value)).toList()),
+      body: AdwViewStack(
+          animationDuration: const Duration(milliseconds: 100),
+          index: _currentIndex,
+          children: files.isEmpty ? [const Text('No file selected')] : files.values.map((value) => object_display_page(selectedFile: value)).toList()),
     );
   }
 }
